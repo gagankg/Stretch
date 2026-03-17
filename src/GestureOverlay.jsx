@@ -68,6 +68,32 @@ export default function GestureOverlay({ hands, width, height }) {
 
       drawHand(ctx, hand.landmarks, width, height, isPinching);
     });
+
+    // Draw blue line between hands when both are pinching
+    if (hands.length >= 2 && highlightRef.current[0] && highlightRef.current[1]) {
+      const thumb0 = hands[0].landmarks[4];
+      const index0 = hands[0].landmarks[8];
+      const thumb1 = hands[1].landmarks[4];
+      const index1 = hands[1].landmarks[8];
+
+      // Midpoint of each hand's pinch
+      const x1 = (1 - (thumb0.x + index0.x) / 2) * width;
+      const y1 = ((thumb0.y + index0.y) / 2) * height;
+      const x2 = (1 - (thumb1.x + index1.x) / 2) * width;
+      const y2 = ((thumb1.y + index1.y) / 2) * height;
+
+      ctx.save();
+      ctx.strokeStyle = '#3B82F6';
+      ctx.lineWidth = 12;
+      ctx.lineCap = 'round';
+      ctx.shadowBlur = 12;
+      ctx.shadowColor = '#3B82F6';
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+      ctx.restore();
+    }
   }, [hands, width, height]);
 
   return (
