@@ -1,5 +1,8 @@
 import { useEffect, useRef } from 'react';
 
+const PINCH_ON = 0.3;
+const PINCH_OFF = 0.4;
+
 function drawHand(ctx, landmarks, width, height, isPinching) {
   for (let i = 0; i < landmarks.length; i++) {
     const lm = landmarks[i];
@@ -30,6 +33,7 @@ function drawHand(ctx, landmarks, width, height, isPinching) {
 
 export default function GestureOverlay({ hands, width, height }) {
   const canvasRef = useRef(null);
+  const highlightRef = useRef([false, false]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -43,7 +47,7 @@ export default function GestureOverlay({ hands, width, height }) {
 
     if (!hands || hands.length === 0) return;
 
-    hands.forEach((hand) => {
+    hands.forEach((hand, idx) => {
       const thumb = hand.landmarks[4];
       const index = hand.landmarks[8];
       const wrist = hand.landmarks[0];
@@ -57,7 +61,11 @@ export default function GestureOverlay({ hands, width, height }) {
       const sz = (wrist.z || 0) - (middleBase.z || 0);
       const handScale = Math.sqrt(sx * sx + sy * sy + sz * sz);
       const normalized = handScale > 0 ? dist / handScale : dist;
-      const isPinching = normalized < 0.15;
+
+      const wasHighlighted = highlightRef.current[idx];
+      const isPinching = wasHighlighted ? normalized < PINCH_OFF : normalized < PINCH_ON;
+      highlightRef.current[idx] = isPinching;
+
       drawHand(ctx, hand.landmarks, width, height, isPinching);
     });
   }, [hands, width, height]);
