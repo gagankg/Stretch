@@ -7,16 +7,23 @@ function drawHand(ctx, landmarks, width, height, isPinching) {
     const y = lm.y * height;
 
     const isFingerTip = (i === 4 || i === 8);
-    const color = (isFingerTip && isPinching) ? '#3B82F6' : '#39ff14';
+    const highlight = isFingerTip && isPinching;
+
+    if (highlight) {
+      ctx.beginPath();
+      ctx.arc(x, y, 8, 0, 2 * Math.PI);
+      ctx.fillStyle = 'rgba(59, 130, 246, 0.3)';
+      ctx.fill();
+    }
 
     ctx.beginPath();
-    ctx.arc(x, y, 2.5, 0, 2 * Math.PI);
-    ctx.fillStyle = color;
+    ctx.arc(x, y, highlight ? 4 : 2.5, 0, 2 * Math.PI);
+    ctx.fillStyle = highlight ? '#3B82F6' : '#39ff14';
     ctx.fill();
 
     // Number label
     ctx.font = '11px monospace';
-    ctx.fillStyle = color;
+    ctx.fillStyle = highlight ? '#3B82F6' : '#39ff14';
     ctx.fillText(i, x + 8, y + 4);
   }
 }
