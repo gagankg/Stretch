@@ -19,79 +19,95 @@ function euclidean(a, b) {
   return Math.sqrt(dx * dx + dy * dy + dz * dz);
 }
 
+function createHandState() {
+  return {
+    state: GESTURE_STATES.IDLE,
+    holdTimer: null,
+    releaseTimer: null,
+  };
+}
+
 export default function useHandTracking(videoRef) {
-  const [landmarks, setLandmarks] = useState(null);
-  const [pinchState, setPinchState] = useState(GESTURE_STATES.IDLE);
-  const [pinchDistance, setPinchDistance] = useState(null);
+  const [hands, setHands] = useState([]);
   const [cameraError, setCameraError] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const stateRef = useRef(GESTURE_STATES.IDLE);
-  const holdTimerRef = useRef(null);
-  const releaseTimerRef = useRef(null);
+  const handStatesRef = useRef([createHandState(), createHandState()]);
   const handLandmarkerRef = useRef(null);
   const rafRef = useRef(null);
   const streamRef = useRef(null);
 
-  const processLandmarks = useCallback((hand) => {
-    setLandmarks(hand);
+  const processResults = useCallback((results) => {
+    const detected = results.landmarks || [];
+    const states = handStatesRef.current;
 
-    const thumbTip = hand[4];
-    const indexTip = hand[8];
-    const wrist = hand[0];
-    const middleBase = hand[9];
+    const newHands = detected.map((hand, idx) => {
+      const hs = states[idx];
 
-    const dist = euclidean(thumbTip, indexTip);
-    const handScale = euclidean(wrist, middleBase);
-    const normalized = handScale > 0 ? dist / handScale : dist;
+      const thumbTip = hand[4];
+      const indexTip = hand[8];
+      const wrist = hand[0];
+      const middleBase = hand[9];
 
-    setPinchDistance(normalized);
+      const dist = euclidean(thumbTip, indexTip);
+      const handScale = euclidean(wrist, middleBase);
+      const normalized = handScale > 0 ? dist / handScale : dist;
 
-    const prev = stateRef.current;
+      const prev = hs.state;
 
-    if (normalized < PINCH_THRESHOLD) {
-      if (prev === GESTURE_STATES.IDLE || prev === GESTURE_STATES.RELEASING) {
-        stateRef.current = GESTURE_STATES.PINCHING;
-        setPinchState(GESTURE_STATES.PINCHING);
+      if (normalized < PINCH_THRESHOLD) {
+        if (prev === GESTURE_STATES.IDLE || prev === GESTURE_STATES.RELEASING) {
+          hs.state = GESTURE_STATES.PINCHING;
 
-        clearTimeout(releaseTimerRef.current);
-        clearTimeout(holdTimerRef.current);
+          clearTimeout(hs.releaseTimer);
+          clearTimeout(hs.holdTimer);
 
-        holdTimerRef.current = setTimeout(() => {
-          if (stateRef.current === GESTURE_STATES.PINCHING) {
-            stateRef.current = GESTURE_STATES.HOLDING;
-            setPinchState(GESTURE_STATES.HOLDING);
-          }
-        }, HOLD_DELAY);
+          hs.holdTimer = setTimeout(() => {
+            if (hs.state === GESTURE_STATES.PINCHING) {
+              hs.state = GESTURE_STATES.HOLDING;
+              // Force a re-render by updating hands
+              setHands((prev) => prev.map((h, i) =>
+                i === idx ? { ...h, pinchState: GESTURE_STATES.HOLDING } : h
+              ));
+            }
+          }, HOLD_DELAY);
+        }
+      } else if (normalized > RELEASE_THRESHOLD) {
+        if (prev === GESTURE_STATES.PINCHING || prev === GESTURE_STATES.HOLDING) {
+          hs.state = GESTURE_STATES.RELEASING;
+
+          clearTimeout(hs.holdTimer);
+          clearTimeout(hs.releaseTimer);
+
+          hs.releaseTimer = setTimeout(() => {
+            if (hs.state === GESTURE_STATES.RELEASING) {
+              hs.state = GESTURE_STATES.IDLE;
+              setHands((prev) => prev.map((h, i) =>
+                i === idx ? { ...h, pinchState: GESTURE_STATES.IDLE } : h
+              ));
+            }
+          }, 400);
+        }
       }
-    } else if (normalized > RELEASE_THRESHOLD) {
-      if (prev === GESTURE_STATES.PINCHING || prev === GESTURE_STATES.HOLDING) {
-        stateRef.current = GESTURE_STATES.RELEASING;
-        setPinchState(GESTURE_STATES.RELEASING);
 
-        clearTimeout(holdTimerRef.current);
-        clearTimeout(releaseTimerRef.current);
+      return {
+        landmarks: hand,
+        pinchState: hs.state,
+        pinchDistance: normalized,
+      };
+    });
 
-        releaseTimerRef.current = setTimeout(() => {
-          if (stateRef.current === GESTURE_STATES.RELEASING) {
-            stateRef.current = GESTURE_STATES.IDLE;
-            setPinchState(GESTURE_STATES.IDLE);
-          }
-        }, 400);
+    // Clear timers for hands that disappeared
+    for (let i = detected.length; i < 2; i++) {
+      const hs = states[i];
+      if (hs.state !== GESTURE_STATES.IDLE) {
+        clearTimeout(hs.holdTimer);
+        clearTimeout(hs.releaseTimer);
+        hs.state = GESTURE_STATES.IDLE;
       }
     }
-  }, []);
 
-  const clearHand = useCallback(() => {
-    setLandmarks(null);
-    setPinchDistance(null);
-
-    if (stateRef.current !== GESTURE_STATES.IDLE) {
-      clearTimeout(holdTimerRef.current);
-      clearTimeout(releaseTimerRef.current);
-      stateRef.current = GESTURE_STATES.IDLE;
-      setPinchState(GESTURE_STATES.IDLE);
-    }
+    setHands(newHands);
   }, []);
 
   useEffect(() => {
@@ -115,7 +131,7 @@ export default function useHandTracking(videoRef) {
             delegate: 'GPU',
           },
           runningMode: 'VIDEO',
-          numHands: 1,
+          numHands: 2,
           minHandDetectionConfidence: 0.7,
           minTrackingConfidence: 0.5,
         });
@@ -150,12 +166,7 @@ export default function useHandTracking(videoRef) {
           if (video.readyState >= 2 && video.currentTime !== lastTime) {
             lastTime = video.currentTime;
             const results = handLandmarker.detectForVideo(video, performance.now());
-
-            if (results.landmarks && results.landmarks.length > 0) {
-              processLandmarks(results.landmarks[0]);
-            } else {
-              clearHand();
-            }
+            processResults(results);
           }
 
           rafRef.current = requestAnimationFrame(detect);
@@ -177,8 +188,11 @@ export default function useHandTracking(videoRef) {
 
     return () => {
       cancelled = true;
-      clearTimeout(holdTimerRef.current);
-      clearTimeout(releaseTimerRef.current);
+      const states = handStatesRef.current;
+      for (const hs of states) {
+        clearTimeout(hs.holdTimer);
+        clearTimeout(hs.releaseTimer);
+      }
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       if (streamRef.current) streamRef.current.getTracks().forEach((t) => t.stop());
       if (handLandmarkerRef.current) {
@@ -186,9 +200,9 @@ export default function useHandTracking(videoRef) {
         handLandmarkerRef.current = null;
       }
     };
-  }, [videoRef, processLandmarks, clearHand]);
+  }, [videoRef, processResults]);
 
-  return { landmarks, pinchState, pinchDistance, cameraError, isLoading };
+  return { hands, cameraError, isLoading };
 }
 
 export { GESTURE_STATES };

@@ -7,7 +7,27 @@ const STATUS_MAP = {
   [GESTURE_STATES.RELEASING]: 'released',
 };
 
-export default function StatusText({ pinchState, pinchDistance, showDebug }) {
+const STATE_PRIORITY = {
+  [GESTURE_STATES.HOLDING]: 3,
+  [GESTURE_STATES.PINCHING]: 2,
+  [GESTURE_STATES.RELEASING]: 1,
+  [GESTURE_STATES.IDLE]: 0,
+};
+
+function getMostActive(hands) {
+  let bestState = GESTURE_STATES.IDLE;
+  let bestDistance = null;
+  for (const hand of hands) {
+    if ((STATE_PRIORITY[hand.pinchState] || 0) > (STATE_PRIORITY[bestState] || 0)) {
+      bestState = hand.pinchState;
+      bestDistance = hand.pinchDistance;
+    }
+  }
+  return { pinchState: bestState, pinchDistance: bestDistance };
+}
+
+export default function StatusText({ hands, showDebug }) {
+  const { pinchState, pinchDistance } = getMostActive(hands);
   const text = STATUS_MAP[pinchState] || '';
 
   return (

@@ -12,10 +12,9 @@ export default function App() {
   const [showDebug, setShowDebug] = useState(false);
   const [dimensions, setDimensions] = useState({ width: 1280, height: 720 });
 
-  const { landmarks, pinchState, pinchDistance, cameraError, isLoading } =
-    useHandTracking(videoRef);
+  const { hands, cameraError, isLoading } = useHandTracking(videoRef);
 
-  useGestureSound(pinchState, soundOn);
+  useGestureSound(hands, soundOn);
 
   useEffect(() => {
     const updateDimensions = () => {
@@ -38,14 +37,13 @@ export default function App() {
         <video ref={videoRef} autoPlay playsInline muted />
 
         <GestureOverlay
-          landmarks={landmarks}
+          hands={hands}
           width={dimensions.width}
           height={dimensions.height}
         />
 
         <StatusText
-          pinchState={pinchState}
-          pinchDistance={pinchDistance}
+          hands={hands}
           showDebug={showDebug}
         />
 

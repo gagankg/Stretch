@@ -16,8 +16,8 @@ Stretch is a browser-based hand gesture recognition app. It uses the device came
 Uses `@mediapipe/tasks-vision` (npm) with `HandLandmarker` API. WASM files loaded from CDN at runtime. The model runs client-side in the browser — no backend.
 
 ### Key Files
-- `src/useHandTracking.js` — Custom hook that initializes MediaPipe Hands, manages the camera feed, and exposes `landmarks`, `pinchState`, and `pinchDistance`. This is the core logic layer.
-- `src/GestureOverlay.jsx` — Canvas component absolutely positioned over the video. Draws 21 hand landmarks (green dots), highlights thumb tip (landmark 4) and index tip (landmark 8) in red, and draws bone connections.
+- `src/useHandTracking.js` — Custom hook that initializes MediaPipe Hands, manages the camera feed, and returns a `hands` array (0–2 entries). Each entry has `{ landmarks, pinchState, pinchDistance }`. Per-hand gesture state is tracked independently via refs.
+- `src/GestureOverlay.jsx` — Canvas component absolutely positioned over the video. Draws all detected hands with color-coded landmarks (green for first hand, blue for second), highlights thumb/index tips, and draws bone connections.
 - `src/StatusText.jsx` — Displays gesture state text at top/bottom of screen.
 - `src/useGestureSound.js` — Web Audio API hook that plays tones on pinch/release events.
 - `src/App.jsx` — Root component. Initializes camera, composes all layers, manages sound toggle and help overlay.

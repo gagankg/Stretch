@@ -15,3 +15,4 @@ Full-screen camera app that detects and visualizes pinch gestures (thumb tip to 
 
 ## Log
 2026-03-17 — Initial project scaffold with Vite + React
+2026-03-17 — Added both-hands tracking support (numHands: 2), color-coded overlays per hand
