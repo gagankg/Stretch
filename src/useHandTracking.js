@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { FilesetResolver, HandLandmarker } from '@mediapipe/tasks-vision';
 
 const PINCH_THRESHOLD = 0.08;
 const RELEASE_THRESHOLD = 0.15;
@@ -28,68 +29,68 @@ export default function useHandTracking(videoRef) {
   const stateRef = useRef(GESTURE_STATES.IDLE);
   const holdTimerRef = useRef(null);
   const releaseTimerRef = useRef(null);
-  const handsRef = useRef(null);
-  const cameraRef = useRef(null);
+  const handLandmarkerRef = useRef(null);
+  const rafRef = useRef(null);
+  const streamRef = useRef(null);
 
-  const onResults = useCallback((results) => {
-    if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-      const hand = results.multiHandLandmarks[0];
-      setLandmarks(hand);
+  const processLandmarks = useCallback((hand) => {
+    setLandmarks(hand);
 
-      const thumbTip = hand[4];
-      const indexTip = hand[8];
-      const wrist = hand[0];
-      const middleBase = hand[9];
+    const thumbTip = hand[4];
+    const indexTip = hand[8];
+    const wrist = hand[0];
+    const middleBase = hand[9];
 
-      const dist = euclidean(thumbTip, indexTip);
-      const handScale = euclidean(wrist, middleBase);
-      const normalized = handScale > 0 ? dist / handScale : dist;
+    const dist = euclidean(thumbTip, indexTip);
+    const handScale = euclidean(wrist, middleBase);
+    const normalized = handScale > 0 ? dist / handScale : dist;
 
-      setPinchDistance(normalized);
+    setPinchDistance(normalized);
 
-      const prev = stateRef.current;
+    const prev = stateRef.current;
 
-      if (normalized < PINCH_THRESHOLD) {
-        if (prev === GESTURE_STATES.IDLE || prev === GESTURE_STATES.RELEASING) {
-          stateRef.current = GESTURE_STATES.PINCHING;
-          setPinchState(GESTURE_STATES.PINCHING);
+    if (normalized < PINCH_THRESHOLD) {
+      if (prev === GESTURE_STATES.IDLE || prev === GESTURE_STATES.RELEASING) {
+        stateRef.current = GESTURE_STATES.PINCHING;
+        setPinchState(GESTURE_STATES.PINCHING);
 
-          clearTimeout(releaseTimerRef.current);
-          clearTimeout(holdTimerRef.current);
+        clearTimeout(releaseTimerRef.current);
+        clearTimeout(holdTimerRef.current);
 
-          holdTimerRef.current = setTimeout(() => {
-            if (stateRef.current === GESTURE_STATES.PINCHING) {
-              stateRef.current = GESTURE_STATES.HOLDING;
-              setPinchState(GESTURE_STATES.HOLDING);
-            }
-          }, HOLD_DELAY);
-        }
-      } else if (normalized > RELEASE_THRESHOLD) {
-        if (prev === GESTURE_STATES.PINCHING || prev === GESTURE_STATES.HOLDING) {
-          stateRef.current = GESTURE_STATES.RELEASING;
-          setPinchState(GESTURE_STATES.RELEASING);
-
-          clearTimeout(holdTimerRef.current);
-          clearTimeout(releaseTimerRef.current);
-
-          releaseTimerRef.current = setTimeout(() => {
-            if (stateRef.current === GESTURE_STATES.RELEASING) {
-              stateRef.current = GESTURE_STATES.IDLE;
-              setPinchState(GESTURE_STATES.IDLE);
-            }
-          }, 400);
-        }
+        holdTimerRef.current = setTimeout(() => {
+          if (stateRef.current === GESTURE_STATES.PINCHING) {
+            stateRef.current = GESTURE_STATES.HOLDING;
+            setPinchState(GESTURE_STATES.HOLDING);
+          }
+        }, HOLD_DELAY);
       }
-    } else {
-      setLandmarks(null);
-      setPinchDistance(null);
+    } else if (normalized > RELEASE_THRESHOLD) {
+      if (prev === GESTURE_STATES.PINCHING || prev === GESTURE_STATES.HOLDING) {
+        stateRef.current = GESTURE_STATES.RELEASING;
+        setPinchState(GESTURE_STATES.RELEASING);
 
-      if (stateRef.current !== GESTURE_STATES.IDLE) {
         clearTimeout(holdTimerRef.current);
         clearTimeout(releaseTimerRef.current);
-        stateRef.current = GESTURE_STATES.IDLE;
-        setPinchState(GESTURE_STATES.IDLE);
+
+        releaseTimerRef.current = setTimeout(() => {
+          if (stateRef.current === GESTURE_STATES.RELEASING) {
+            stateRef.current = GESTURE_STATES.IDLE;
+            setPinchState(GESTURE_STATES.IDLE);
+          }
+        }, 400);
       }
+    }
+  }, []);
+
+  const clearHand = useCallback(() => {
+    setLandmarks(null);
+    setPinchDistance(null);
+
+    if (stateRef.current !== GESTURE_STATES.IDLE) {
+      clearTimeout(holdTimerRef.current);
+      clearTimeout(releaseTimerRef.current);
+      stateRef.current = GESTURE_STATES.IDLE;
+      setPinchState(GESTURE_STATES.IDLE);
     }
   }, []);
 
@@ -97,68 +98,95 @@ export default function useHandTracking(videoRef) {
     const video = videoRef.current;
     if (!video) return;
 
-    const Hands = window.Hands;
-    const Camera = window.Camera;
+    let cancelled = false;
 
-    if (!Hands || !Camera) {
-      setCameraError('MediaPipe libraries not loaded. Check your internet connection.');
-      setIsLoading(false);
-      return;
-    }
+    async function init() {
+      try {
+        const vision = await FilesetResolver.forVisionTasks(
+          'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm'
+        );
 
-    const hands = new Hands({
-      locateFile: (file) =>
-        `https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/${file}`,
-    });
+        if (cancelled) return;
 
-    hands.setOptions({
-      maxNumHands: 1,
-      modelComplexity: 1,
-      minDetectionConfidence: 0.7,
-      minTrackingConfidence: 0.5,
-    });
+        const handLandmarker = await HandLandmarker.createFromOptions(vision, {
+          baseOptions: {
+            modelAssetPath:
+              'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task',
+            delegate: 'GPU',
+          },
+          runningMode: 'VIDEO',
+          numHands: 1,
+          minHandDetectionConfidence: 0.7,
+          minTrackingConfidence: 0.5,
+        });
 
-    hands.onResults(onResults);
-    handsRef.current = hands;
+        if (cancelled) {
+          handLandmarker.close();
+          return;
+        }
 
-    hands.initialize().then(() => {
-      setIsLoading(false);
+        handLandmarkerRef.current = handLandmarker;
 
-      const camera = new Camera(video, {
-        onFrame: async () => {
-          if (handsRef.current) {
-            await handsRef.current.send({ image: video });
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'user' },
+        });
+
+        if (cancelled) {
+          stream.getTracks().forEach((t) => t.stop());
+          handLandmarker.close();
+          return;
+        }
+
+        streamRef.current = stream;
+        video.srcObject = stream;
+        await video.play();
+
+        setIsLoading(false);
+
+        let lastTime = -1;
+        function detect() {
+          if (cancelled) return;
+
+          if (video.readyState >= 2 && video.currentTime !== lastTime) {
+            lastTime = video.currentTime;
+            const results = handLandmarker.detectForVideo(video, performance.now());
+
+            if (results.landmarks && results.landmarks.length > 0) {
+              processLandmarks(results.landmarks[0]);
+            } else {
+              clearHand();
+            }
           }
-        },
-        width: 1280,
-        height: 720,
-      });
 
-      cameraRef.current = camera;
-      camera.start().catch((err) => {
+          rafRef.current = requestAnimationFrame(detect);
+        }
+
+        detect();
+      } catch (err) {
+        if (cancelled) return;
         setCameraError(
           err.name === 'NotAllowedError'
             ? 'Camera access denied. Please allow camera permissions and reload.'
-            : `Camera error: ${err.message}`
+            : `Failed to initialize: ${err.message}`
         );
-      });
-    }).catch((err) => {
-      setCameraError(`Failed to load hand tracking model: ${err.message}`);
-      setIsLoading(false);
-    });
+        setIsLoading(false);
+      }
+    }
+
+    init();
 
     return () => {
+      cancelled = true;
       clearTimeout(holdTimerRef.current);
       clearTimeout(releaseTimerRef.current);
-      if (cameraRef.current) {
-        cameraRef.current.stop();
-      }
-      if (handsRef.current) {
-        handsRef.current.close();
-        handsRef.current = null;
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      if (streamRef.current) streamRef.current.getTracks().forEach((t) => t.stop());
+      if (handLandmarkerRef.current) {
+        handLandmarkerRef.current.close();
+        handLandmarkerRef.current = null;
       }
     };
-  }, [videoRef, onResults]);
+  }, [videoRef, processLandmarks, clearHand]);
 
   return { landmarks, pinchState, pinchDistance, cameraError, isLoading };
 }

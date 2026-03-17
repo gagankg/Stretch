@@ -13,7 +13,7 @@ Stretch is a browser-based hand gesture recognition app. It uses the device came
 ## Architecture
 
 ### MediaPipe Integration
-MediaPipe Hands is loaded via CDN (not npm). The `index.html` includes script tags for `@mediapipe/hands` and `@mediapipe/camera_utils`. The model runs client-side in the browser — no backend.
+Uses `@mediapipe/tasks-vision` (npm) with `HandLandmarker` API. WASM files loaded from CDN at runtime. The model runs client-side in the browser — no backend.
 
 ### Key Files
 - `src/useHandTracking.js` — Custom hook that initializes MediaPipe Hands, manages the camera feed, and exposes `landmarks`, `pinchState`, and `pinchDistance`. This is the core logic layer.
@@ -36,6 +36,6 @@ MediaPipe Hands is loaded via CDN (not npm). The `index.html` includes script ta
 
 ## Conventions
 - No backend — everything runs in the browser
-- MediaPipe loaded from CDN, not bundled
+- MediaPipe installed via npm (`@mediapipe/tasks-vision`), WASM loaded from CDN at runtime
 - Camera permission errors show a user-friendly error state
 - Must work on Chrome desktop and mobile Safari
