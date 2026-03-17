@@ -44,7 +44,20 @@ export default function GestureOverlay({ hands, width, height }) {
     if (!hands || hands.length === 0) return;
 
     hands.forEach((hand) => {
-      const isPinching = hand.pinchState === 'PINCHING' || hand.pinchState === 'HOLDING';
+      const thumb = hand.landmarks[4];
+      const index = hand.landmarks[8];
+      const wrist = hand.landmarks[0];
+      const middleBase = hand.landmarks[9];
+      const dx = thumb.x - index.x;
+      const dy = thumb.y - index.y;
+      const dz = (thumb.z || 0) - (index.z || 0);
+      const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+      const sx = wrist.x - middleBase.x;
+      const sy = wrist.y - middleBase.y;
+      const sz = (wrist.z || 0) - (middleBase.z || 0);
+      const handScale = Math.sqrt(sx * sx + sy * sy + sz * sz);
+      const normalized = handScale > 0 ? dist / handScale : dist;
+      const isPinching = normalized < 0.15;
       drawHand(ctx, hand.landmarks, width, height, isPinching);
     });
   }, [hands, width, height]);
