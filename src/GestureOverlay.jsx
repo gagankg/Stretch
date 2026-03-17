@@ -9,12 +9,12 @@ function drawHand(ctx, landmarks, width, height) {
     // Green dot
     ctx.beginPath();
     ctx.arc(x, y, 2.5, 0, 2 * Math.PI);
-    ctx.fillStyle = '#00ff66';
+    ctx.fillStyle = '#39ff14';
     ctx.fill();
 
     // Number label
     ctx.font = '11px monospace';
-    ctx.fillStyle = '#00ff66';
+    ctx.fillStyle = '#39ff14';
     ctx.fillText(i, x + 8, y + 4);
   }
 }
