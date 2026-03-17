@@ -1,20 +1,22 @@
 import { useEffect, useRef } from 'react';
 
-function drawHand(ctx, landmarks, width, height) {
+function drawHand(ctx, landmarks, width, height, isPinching) {
   for (let i = 0; i < landmarks.length; i++) {
     const lm = landmarks[i];
     const x = (1 - lm.x) * width;
     const y = lm.y * height;
 
-    // Green dot
+    const isFingerTip = (i === 4 || i === 8);
+    const color = (isFingerTip && isPinching) ? '#3B82F6' : '#39ff14';
+
     ctx.beginPath();
     ctx.arc(x, y, 2.5, 0, 2 * Math.PI);
-    ctx.fillStyle = '#39ff14';
+    ctx.fillStyle = color;
     ctx.fill();
 
     // Number label
     ctx.font = '11px monospace';
-    ctx.fillStyle = '#39ff14';
+    ctx.fillStyle = color;
     ctx.fillText(i, x + 8, y + 4);
   }
 }
@@ -35,7 +37,8 @@ export default function GestureOverlay({ hands, width, height }) {
     if (!hands || hands.length === 0) return;
 
     hands.forEach((hand) => {
-      drawHand(ctx, hand.landmarks, width, height);
+      const isPinching = hand.pinchState === 'PINCHING' || hand.pinchState === 'HOLDING';
+      drawHand(ctx, hand.landmarks, width, height, isPinching);
     });
   }, [hands, width, height]);
 
