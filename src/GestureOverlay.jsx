@@ -40,7 +40,8 @@ function drawThuglifeGlasses(ctx, img, faceLandmarks, width, height, intensity) 
   const glassesHeight = glassesWidth * (img.naturalHeight / img.naturalWidth);
 
   // Tilt angle to follow head rotation
-  const angle = Math.atan2(ry - ly, rx - lx);
+  // Mirroring swaps eye positions on canvas (lx > rx), so reverse direction
+  const angle = Math.atan2(ly - ry, lx - rx);
 
   // Drop-down: slides from above as intensity goes 0→1
   const dropOffset = (1 - intensity) * height * 0.15;
