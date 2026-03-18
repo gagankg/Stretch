@@ -82,23 +82,41 @@ export default function GestureOverlay({ hands, width, height }) {
       const x2 = (1 - (thumb1.x + index1.x) / 2) * width;
       const y2 = ((thumb1.y + index1.y) / 2) * height;
 
-      const lineDx = x2 - x1;
-      const lineDy = y2 - y1;
-      const pixelDist = Math.sqrt(lineDx * lineDx + lineDy * lineDy);
-      const maxDist = Math.sqrt(width * width + height * height);
-      const t = Math.min(pixelDist / maxDist, 1);
-      const lineWidth = 14 * (1 - t) + 2;
-
       ctx.save();
-      ctx.strokeStyle = '#3B82F6';
-      ctx.lineWidth = lineWidth;
       ctx.lineCap = 'round';
-      ctx.shadowBlur = lineWidth;
+
+      // Layer 1 — Outer glow (wide, soft)
+      ctx.strokeStyle = 'rgba(59, 130, 246, 0.15)';
+      ctx.lineWidth = 24;
+      ctx.shadowBlur = 40;
       ctx.shadowColor = '#3B82F6';
       ctx.beginPath();
       ctx.moveTo(x1, y1);
       ctx.lineTo(x2, y2);
       ctx.stroke();
+
+      // Layer 2 — Mid glow (medium)
+      ctx.strokeStyle = 'rgba(99, 165, 255, 0.4)';
+      ctx.lineWidth = 12;
+      ctx.shadowBlur = 20;
+      ctx.shadowColor = '#60A5FA';
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+
+      // Layer 3 — Core beam (sharp, bright, pulsing)
+      const pulse = 2 + Math.sin(Date.now() / 80) * 0.6;
+      ctx.strokeStyle = '#FFFFFF';
+      ctx.lineWidth = pulse;
+      ctx.shadowBlur = 10;
+      ctx.shadowColor = '#93C5FD';
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+
+      ctx.shadowBlur = 0;
       ctx.restore();
     }
   }, [hands, width, height]);
