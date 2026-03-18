@@ -1,7 +1,6 @@
 @font-face {
   font-family: 'Exposure';
   src: url('./fonts/ExposureTrialVAR.ttf') format('truetype');
-  font-weight: 100 900;
   font-display: swap;
 }
 
@@ -55,7 +54,6 @@ html, body, #root {
   font-family: 'Exposure', sans-serif;
   font-size: clamp(28px, 5vw, 56px);
   font-style: normal;
-  font-weight: 300;
   letter-spacing: 0.04em;
   color: rgba(255, 255, 255, 0.7);
   pointer-events: none;
