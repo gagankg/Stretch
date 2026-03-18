@@ -1,11 +1,6 @@
 import { GESTURE_STATES } from './useHandTracking';
 
-const STATUS_MAP = {
-  [GESTURE_STATES.IDLE]: 'stretch me, pull me',
-  [GESTURE_STATES.PINCHING]: 'pinching...',
-  [GESTURE_STATES.HOLDING]: 'holding',
-  [GESTURE_STATES.RELEASING]: 'released',
-};
+const STATUS_TEXT = 'stretch me, pull me';
 
 const STATE_PRIORITY = {
   [GESTURE_STATES.HOLDING]: 3,
@@ -27,8 +22,7 @@ function getMostActive(hands) {
 }
 
 export default function StatusText({ hands, showDebug, stretchAmount }) {
-  const { pinchState, pinchDistance } = getMostActive(hands);
-  const text = STATUS_MAP[pinchState] || '';
+  const { pinchDistance } = getMostActive(hands);
 
   // Font weight: 100 (thin, stretched far) to 900 (heavy, close together)
   const fontWeight = stretchAmount != null
@@ -37,10 +31,7 @@ export default function StatusText({ hands, showDebug, stretchAmount }) {
 
   return (
     <>
-      <div className="status-text status-top" style={{ fontWeight }}>{text}</div>
-      <div className="status-text status-bottom">
-        {pinchState === GESTURE_STATES.HOLDING ? '...' : ''}
-      </div>
+      <div className="status-text status-top" style={{ fontWeight }}>{STATUS_TEXT}</div>
       {showDebug && pinchDistance != null && (
         <div className="debug-label">
           d: {pinchDistance.toFixed(3)}
