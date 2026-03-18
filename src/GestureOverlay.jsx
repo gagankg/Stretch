@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { COLORS } from './colors';
 import { GESTURE_STATES } from './useHandTracking';
+import thuglifeSrc from './assets/thuglife.png';
 
 const PINCH_ON = 0.3;
 const PINCH_OFF = 0.4;
@@ -16,48 +17,39 @@ const BONE_CONNECTIONS = [
 
 const FINGERTIPS = [4, 8, 12, 16, 20];
 
-// MediaPipe FaceLandmarker iris indices
-const LEFT_IRIS_CENTER = 468;
-const LEFT_IRIS_EDGE = 469;
-const RIGHT_IRIS_CENTER = 473;
-const RIGHT_IRIS_EDGE = 474;
+// Face landmark indices for sunglasses positioning
+const LEFT_EYE_OUTER = 33;
+const RIGHT_EYE_OUTER = 263;
+function drawThuglifeGlasses(ctx, img, faceLandmarks, width, height, intensity) {
+  if (!faceLandmarks || !img || intensity <= 0) return;
 
-function drawNeonEyes(ctx, faceLandmarks, width, height, intensity) {
-  if (!faceLandmarks || intensity <= 0) return;
+  const leftOuter = faceLandmarks[LEFT_EYE_OUTER];
+  const rightOuter = faceLandmarks[RIGHT_EYE_OUTER];
 
-  const irises = [
-    [faceLandmarks[LEFT_IRIS_CENTER], faceLandmarks[LEFT_IRIS_EDGE]],
-    [faceLandmarks[RIGHT_IRIS_CENTER], faceLandmarks[RIGHT_IRIS_EDGE]],
-  ];
+  // Mirrored canvas coords
+  const lx = (1 - leftOuter.x) * width;
+  const ly = leftOuter.y * height;
+  const rx = (1 - rightOuter.x) * width;
+  const ry = rightOuter.y * height;
+  const cx = (lx + rx) / 2;
+  const cy = (ly + ry) / 2;
+
+  // Eye span for scaling, with padding for the frames
+  const eyeSpan = Math.sqrt((rx - lx) ** 2 + (ry - ly) ** 2);
+  const glassesWidth = eyeSpan * 1.8;
+  const glassesHeight = glassesWidth * (img.naturalHeight / img.naturalWidth);
+
+  // Tilt angle to follow head rotation
+  const angle = Math.atan2(ry - ly, rx - lx);
+
+  // Drop-down: slides from above as intensity goes 0→1
+  const dropOffset = (1 - intensity) * height * 0.15;
 
   ctx.save();
   ctx.globalAlpha = intensity;
-
-  for (const [center, edge] of irises) {
-    const cx = (1 - center.x) * width;
-    const cy = center.y * height;
-    const ex = (1 - edge.x) * width;
-    const ey = edge.y * height;
-    const radius = Math.sqrt((cx - ex) ** 2 + (cy - ey) ** 2);
-
-    // Outer glow
-    ctx.shadowBlur = radius * 4;
-    ctx.shadowColor = COLORS.eyeGlow;
-
-    // Iris fill
-    ctx.beginPath();
-    ctx.arc(cx, cy, radius, 0, 2 * Math.PI);
-    ctx.fillStyle = COLORS.eyeIris;
-    ctx.fill();
-
-    // Bright pupil center
-    ctx.shadowBlur = 0;
-    ctx.beginPath();
-    ctx.arc(cx, cy, radius * 0.25, 0, 2 * Math.PI);
-    ctx.fillStyle = COLORS.eyeCenter;
-    ctx.fill();
-  }
-
+  ctx.translate(cx, cy - dropOffset);
+  ctx.rotate(angle);
+  ctx.drawImage(img, -glassesWidth / 2, -glassesHeight / 2, glassesWidth, glassesHeight);
   ctx.restore();
 }
 
@@ -133,6 +125,14 @@ export default function GestureOverlay({ hands, faceLandmarks, stretchAmount, wi
   const canvasRef = useRef(null);
   const highlightRef = useRef([false, false]);
   const beamStartRef = useRef(null); // timestamp when beam first appeared
+  const thuglifeImgRef = useRef(null);
+
+  // Preload thuglife image once
+  useEffect(() => {
+    const img = new Image();
+    img.src = thuglifeSrc;
+    img.onload = () => { thuglifeImgRef.current = img; };
+  }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -261,10 +261,10 @@ export default function GestureOverlay({ hands, faceLandmarks, stretchAmount, wi
       beamStartRef.current = null;
     }
 
-    // Neon green eyes when stretching
-    if (bothPinching && faceLandmarks) {
+    // Thuglife sunglasses when stretching
+    if (bothPinching && faceLandmarks && thuglifeImgRef.current) {
       const intensity = Math.min((stretchAmount || 0) * 2, 1);
-      drawNeonEyes(ctx, faceLandmarks, width, height, intensity);
+      drawThuglifeGlasses(ctx, thuglifeImgRef.current, faceLandmarks, width, height, intensity);
     }
   }, [hands, faceLandmarks, stretchAmount, width, height]);
 

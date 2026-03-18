@@ -25,9 +25,4 @@ export const COLORS = {
   // Endpoint accents
   endpointFill: '#FFFFFF',
   endpointGlow: 'rgba(139, 92, 246, 0.25)',
-
-  // Neon eye effect
-  eyeIris: '#39ff14',
-  eyeGlow: 'rgba(57, 255, 20, 0.6)',
-  eyeCenter: '#FFFFFF',
 };
