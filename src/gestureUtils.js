@@ -7,16 +7,6 @@ const STATE_PRIORITY = {
   [GESTURE_STATES.IDLE]: 0,
 };
 
-export function getMostActiveState(hands) {
-  let best = GESTURE_STATES.IDLE;
-  for (const hand of hands) {
-    if ((STATE_PRIORITY[hand.pinchState] || 0) > (STATE_PRIORITY[best] || 0)) {
-      best = hand.pinchState;
-    }
-  }
-  return best;
-}
-
 export function getMostActive(hands) {
   let bestState = GESTURE_STATES.IDLE;
   let bestDistance = null;

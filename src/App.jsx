@@ -1,6 +1,5 @@
 import { useRef, useState, useEffect, useMemo } from 'react';
 import useHandTracking from './useHandTracking';
-import useGestureSound from './useGestureSound';
 import GestureOverlay from './GestureOverlay';
 import StatusText from './StatusText';
 export default function App() {
@@ -8,14 +7,11 @@ export default function App() {
   const containerRef = useRef(null);
 
   const [cameraStarted, setCameraStarted] = useState(false);
-  const [soundOn, setSoundOn] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
 
   const [dimensions, setDimensions] = useState({ width: 1280, height: 720 });
 
   const { hands, cameraError, isLoading } = useHandTracking(videoRef, cameraStarted);
-
-  useGestureSound(hands, soundOn);
 
   // Compute stretch ratio (0 = close, 1 = far apart) when both hands pinch
   const stretchAmount = useMemo(() => {
@@ -113,26 +109,6 @@ export default function App() {
       </div>
 
       <div className="controls">
-        <button
-          className={`icon-btn ${soundOn ? '' : 'muted'}`}
-          onClick={() => setSoundOn((s) => !s)}
-          aria-label={soundOn ? 'Mute sound' : 'Unmute sound'}
-        >
-          {soundOn ? (
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M11 5L6 9H2v6h4l5 4V5z" />
-              <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
-              <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
-            </svg>
-          ) : (
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M11 5L6 9H2v6h4l5 4V5z" />
-              <line x1="23" y1="9" x2="17" y2="15" />
-              <line x1="17" y1="9" x2="23" y2="15" />
-            </svg>
-          )}
-        </button>
-
         <button className="icon-btn" onClick={() => setShowHelp(true)} aria-label="Help">
           ?
         </button>

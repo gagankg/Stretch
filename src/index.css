@@ -162,10 +162,6 @@ html, body, #root {
   outline-offset: 2px;
 }
 
-.icon-btn.muted {
-  color: var(--text-tertiary);
-}
-
 /* Help overlay */
 .help-overlay {
   position: absolute;
