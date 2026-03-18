@@ -121,7 +121,7 @@ export default function App() {
           <div className="help-content" onClick={(e) => e.stopPropagation()}>
             <h2>stretch</h2>
             <img src={gestureSvg} alt="Pinch gesture illustration" className="help-gesture-img" />
-            <p>Stretch Me is a game where you stretch a line to connect two points.</p>
+            <p>Stretch is a game where you stretch a line to connect two points.</p>
             <p>Try pinching your index finger and thumb together on both hands to start.</p>
             <p>Have fun. Play with yourself. Play with your friends.</p>
             <button className="help-close" onClick={() => setShowHelp(false)}>
