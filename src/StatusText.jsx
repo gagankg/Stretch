@@ -26,13 +26,18 @@ function getMostActive(hands) {
   return { pinchState: bestState, pinchDistance: bestDistance };
 }
 
-export default function StatusText({ hands, showDebug }) {
+export default function StatusText({ hands, showDebug, stretchAmount }) {
   const { pinchState, pinchDistance } = getMostActive(hands);
   const text = STATUS_MAP[pinchState] || '';
 
+  // Font weight: 100 (thin, stretched far) to 900 (heavy, close together)
+  const fontWeight = stretchAmount != null
+    ? Math.round((1 - stretchAmount) * 800 + 100)
+    : 400;
+
   return (
     <>
-      <div className="status-text status-top">{text}</div>
+      <div className="status-text status-top" style={{ fontWeight }}>{text}</div>
       <div className="status-text status-bottom">
         {pinchState === GESTURE_STATES.HOLDING ? '...' : ''}
       </div>

@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useMemo } from 'react';
 import useHandTracking from './useHandTracking';
 import useGestureSound from './useGestureSound';
 import GestureOverlay from './GestureOverlay';
@@ -15,6 +15,22 @@ export default function App() {
   const { hands, cameraError, isLoading } = useHandTracking(videoRef);
 
   useGestureSound(hands, soundOn);
+
+  // Compute stretch ratio (0 = close, 1 = far apart) when both hands pinch
+  const stretchAmount = useMemo(() => {
+    if (!hands || hands.length < 2) return null;
+    const t0 = hands[0].landmarks[4];
+    const i0 = hands[0].landmarks[8];
+    const t1 = hands[1].landmarks[4];
+    const i1 = hands[1].landmarks[8];
+    const x1 = (t0.x + i0.x) / 2;
+    const y1 = (t0.y + i0.y) / 2;
+    const x2 = (t1.x + i1.x) / 2;
+    const y2 = (t1.y + i1.y) / 2;
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    return Math.min(Math.sqrt(dx * dx + dy * dy) / 0.8, 1);
+  }, [hands]);
 
   useEffect(() => {
     const updateDimensions = () => {
@@ -45,6 +61,7 @@ export default function App() {
         <StatusText
           hands={hands}
           showDebug={showDebug}
+          stretchAmount={stretchAmount}
         />
 
         {isLoading && (
