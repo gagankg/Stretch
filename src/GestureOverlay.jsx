@@ -31,7 +31,7 @@ function drawHand(ctx, landmarks, width, height, isPinching) {
   }
 }
 
-export default function GestureOverlay({ hands, width, height }) {
+export default function GestureOverlay({ hands, width, height, maskCanvasRef, darkenOpacity }) {
   const canvasRef = useRef(null);
   const highlightRef = useRef([false, false]);
 
@@ -44,6 +44,18 @@ export default function GestureOverlay({ hands, width, height }) {
 
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, width, height);
+
+    // Draw background darkening from segmentation mask
+    if (darkenOpacity > 0 && maskCanvasRef?.current) {
+      ctx.save();
+      // Mirror horizontally to match the CSS-mirrored video
+      ctx.scale(-1, 1);
+      ctx.translate(-width, 0);
+      ctx.globalAlpha = darkenOpacity;
+      ctx.drawImage(maskCanvasRef.current, 0, 0, width, height);
+      ctx.globalAlpha = 1;
+      ctx.restore();
+    }
 
     if (!hands || hands.length === 0) return;
 
@@ -127,7 +139,7 @@ export default function GestureOverlay({ hands, width, height }) {
       ctx.shadowBlur = 0;
       ctx.restore();
     }
-  }, [hands, width, height]);
+  }, [hands, width, height, maskCanvasRef, darkenOpacity]);
 
   return (
     <canvas

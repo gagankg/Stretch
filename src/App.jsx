@@ -12,7 +12,7 @@ export default function App() {
   const [showDebug, setShowDebug] = useState(false);
   const [dimensions, setDimensions] = useState({ width: 1280, height: 720 });
 
-  const { hands, cameraError, isLoading } = useHandTracking(videoRef);
+  const { hands, cameraError, isLoading, segMaskCanvasRef } = useHandTracking(videoRef);
 
   useGestureSound(hands, soundOn);
 
@@ -68,15 +68,12 @@ export default function App() {
       <div className="camera-container" ref={containerRef}>
         <video ref={videoRef} autoPlay playsInline muted />
 
-        <div
-          className="vignette-overlay"
-          style={{ opacity: vignetteOpacity }}
-        />
-
         <GestureOverlay
           hands={hands}
           width={dimensions.width}
           height={dimensions.height}
+          maskCanvasRef={segMaskCanvasRef}
+          darkenOpacity={vignetteOpacity}
         />
 
         <StatusText
