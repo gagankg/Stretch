@@ -16,6 +16,51 @@ const BONE_CONNECTIONS = [
 
 const FINGERTIPS = [4, 8, 12, 16, 20];
 
+// MediaPipe FaceLandmarker iris indices
+const LEFT_IRIS_CENTER = 468;
+const LEFT_IRIS_EDGE = 469;
+const RIGHT_IRIS_CENTER = 473;
+const RIGHT_IRIS_EDGE = 474;
+
+function drawNeonEyes(ctx, faceLandmarks, width, height, intensity) {
+  if (!faceLandmarks || intensity <= 0) return;
+
+  const irises = [
+    [faceLandmarks[LEFT_IRIS_CENTER], faceLandmarks[LEFT_IRIS_EDGE]],
+    [faceLandmarks[RIGHT_IRIS_CENTER], faceLandmarks[RIGHT_IRIS_EDGE]],
+  ];
+
+  ctx.save();
+  ctx.globalAlpha = intensity;
+
+  for (const [center, edge] of irises) {
+    const cx = (1 - center.x) * width;
+    const cy = center.y * height;
+    const ex = (1 - edge.x) * width;
+    const ey = edge.y * height;
+    const radius = Math.sqrt((cx - ex) ** 2 + (cy - ey) ** 2);
+
+    // Outer glow
+    ctx.shadowBlur = radius * 4;
+    ctx.shadowColor = COLORS.eyeGlow;
+
+    // Iris fill
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, 0, 2 * Math.PI);
+    ctx.fillStyle = COLORS.eyeIris;
+    ctx.fill();
+
+    // Bright pupil center
+    ctx.shadowBlur = 0;
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius * 0.25, 0, 2 * Math.PI);
+    ctx.fillStyle = COLORS.eyeCenter;
+    ctx.fill();
+  }
+
+  ctx.restore();
+}
+
 function drawHand(ctx, landmarks, width, height, isPinching) {
   // Draw bone connections (subtle skeletal lines)
   ctx.save();
@@ -84,7 +129,7 @@ function drawHand(ctx, landmarks, width, height, isPinching) {
   }
 }
 
-export default function GestureOverlay({ hands, width, height }) {
+export default function GestureOverlay({ hands, faceLandmarks, stretchAmount, width, height }) {
   const canvasRef = useRef(null);
   const highlightRef = useRef([false, false]);
   const beamStartRef = useRef(null); // timestamp when beam first appeared
@@ -215,7 +260,13 @@ export default function GestureOverlay({ hands, width, height }) {
     } else {
       beamStartRef.current = null;
     }
-  }, [hands, width, height]);
+
+    // Neon green eyes when stretching
+    if (bothPinching && faceLandmarks) {
+      const intensity = Math.min((stretchAmount || 0) * 2, 1);
+      drawNeonEyes(ctx, faceLandmarks, width, height, intensity);
+    }
+  }, [hands, faceLandmarks, stretchAmount, width, height]);
 
   return (
     <canvas

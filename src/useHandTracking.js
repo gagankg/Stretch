@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { FilesetResolver, HandLandmarker } from '@mediapipe/tasks-vision';
+import { FilesetResolver, HandLandmarker, FaceLandmarker } from '@mediapipe/tasks-vision';
 
 const PINCH_THRESHOLD = 0.08;
 const RELEASE_THRESHOLD = 0.15;
@@ -29,11 +29,13 @@ function createHandState() {
 
 export default function useHandTracking(videoRef, enabled = true) {
   const [hands, setHands] = useState([]);
+  const [faceLandmarks, setFaceLandmarks] = useState(null);
   const [cameraError, setCameraError] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const handStatesRef = useRef([createHandState(), createHandState()]);
   const handLandmarkerRef = useRef(null);
+  const faceLandmarkerRef = useRef(null);
   const rafRef = useRef(null);
   const streamRef = useRef(null);
 
@@ -143,12 +145,31 @@ export default function useHandTracking(videoRef, enabled = true) {
 
         handLandmarkerRef.current = handLandmarker;
 
+        const faceLandmarker = await FaceLandmarker.createFromOptions(vision, {
+          baseOptions: {
+            modelAssetPath:
+              'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task',
+            delegate: 'GPU',
+          },
+          runningMode: 'VIDEO',
+          numFaces: 1,
+        });
+
+        if (cancelled) {
+          faceLandmarker.close();
+          handLandmarker.close();
+          return;
+        }
+
+        faceLandmarkerRef.current = faceLandmarker;
+
         const stream = await navigator.mediaDevices.getUserMedia({
           video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'user' },
         });
 
         if (cancelled) {
           stream.getTracks().forEach((t) => t.stop());
+          faceLandmarker.close();
           handLandmarker.close();
           return;
         }
@@ -165,8 +186,16 @@ export default function useHandTracking(videoRef, enabled = true) {
 
           if (video.readyState >= 2 && video.currentTime !== lastTime) {
             lastTime = video.currentTime;
-            const results = handLandmarker.detectForVideo(video, performance.now());
+            const now = performance.now();
+            const results = handLandmarker.detectForVideo(video, now);
             processResults(results);
+
+            const faceResults = faceLandmarker.detectForVideo(video, now);
+            setFaceLandmarks(
+              faceResults.faceLandmarks && faceResults.faceLandmarks.length > 0
+                ? faceResults.faceLandmarks[0]
+                : null
+            );
           }
 
           rafRef.current = requestAnimationFrame(detect);
@@ -199,10 +228,14 @@ export default function useHandTracking(videoRef, enabled = true) {
         handLandmarkerRef.current.close();
         handLandmarkerRef.current = null;
       }
+      if (faceLandmarkerRef.current) {
+        faceLandmarkerRef.current.close();
+        faceLandmarkerRef.current = null;
+      }
     };
   }, [videoRef, enabled, processResults]);
 
-  return { hands, cameraError, isLoading };
+  return { hands, faceLandmarks, cameraError, isLoading };
 }
 
 export { GESTURE_STATES };

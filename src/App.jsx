@@ -12,7 +12,7 @@ export default function App() {
 
   const [dimensions, setDimensions] = useState({ width: 1280, height: 720 });
 
-  const { hands, cameraError, isLoading } = useHandTracking(videoRef, cameraStarted);
+  const { hands, faceLandmarks, cameraError, isLoading } = useHandTracking(videoRef, cameraStarted);
 
   // Compute stretch ratio (0 = close, 1 = far apart) when both hands pinch
   const stretchAmount = useMemo(() => {
@@ -73,6 +73,8 @@ export default function App() {
 
         <GestureOverlay
           hands={hands}
+          faceLandmarks={faceLandmarks}
+          stretchAmount={stretchAmount}
           width={dimensions.width}
           height={dimensions.height}
         />
