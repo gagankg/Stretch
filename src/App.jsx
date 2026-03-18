@@ -32,6 +32,22 @@ export default function App() {
     return Math.min(Math.sqrt(dx * dx + dy * dy) / 0.8, 1);
   }, [hands]);
 
+  // Vignette: darken edges with stretch, matching lightsaber pinch thresholds
+  const bothPinchingRef = useRef(false);
+  const vignetteOpacity = useMemo(() => {
+    if (!hands || hands.length < 2) {
+      bothPinchingRef.current = false;
+      return 0;
+    }
+    const PINCH_ON = 0.3;
+    const PINCH_OFF = 0.4;
+    const threshold = bothPinchingRef.current ? PINCH_OFF : PINCH_ON;
+    const allPinching = hands.every(h => h.pinchDistance < threshold);
+    bothPinchingRef.current = allPinching;
+    if (!allPinching) return 0;
+    return stretchAmount || 0;
+  }, [hands, stretchAmount]);
+
   useEffect(() => {
     const updateDimensions = () => {
       if (containerRef.current) {
@@ -51,6 +67,11 @@ export default function App() {
     <div className="app">
       <div className="camera-container" ref={containerRef}>
         <video ref={videoRef} autoPlay playsInline muted />
+
+        <div
+          className="vignette-overlay"
+          style={{ opacity: vignetteOpacity }}
+        />
 
         <GestureOverlay
           hands={hands}
