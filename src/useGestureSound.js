@@ -1,23 +1,6 @@
 import { useRef, useEffect, useCallback } from 'react';
 import { GESTURE_STATES } from './useHandTracking';
-
-// Priority: HOLDING > PINCHING > RELEASING > IDLE
-const STATE_PRIORITY = {
-  [GESTURE_STATES.HOLDING]: 3,
-  [GESTURE_STATES.PINCHING]: 2,
-  [GESTURE_STATES.RELEASING]: 1,
-  [GESTURE_STATES.IDLE]: 0,
-};
-
-function getMostActiveState(hands) {
-  let best = GESTURE_STATES.IDLE;
-  for (const hand of hands) {
-    if ((STATE_PRIORITY[hand.pinchState] || 0) > (STATE_PRIORITY[best] || 0)) {
-      best = hand.pinchState;
-    }
-  }
-  return best;
-}
+import { getMostActiveState } from './gestureUtils';
 
 export default function useGestureSound(hands, enabled) {
   const audioCtxRef = useRef(null);
