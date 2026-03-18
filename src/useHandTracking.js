@@ -27,7 +27,7 @@ function createHandState() {
   };
 }
 
-export default function useHandTracking(videoRef) {
+export default function useHandTracking(videoRef, enabled = true) {
   const [hands, setHands] = useState([]);
   const [cameraError, setCameraError] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -112,7 +112,7 @@ export default function useHandTracking(videoRef) {
 
   useEffect(() => {
     const video = videoRef.current;
-    if (!video) return;
+    if (!video || !enabled) return;
 
     let cancelled = false;
 
@@ -200,7 +200,7 @@ export default function useHandTracking(videoRef) {
         handLandmarkerRef.current = null;
       }
     };
-  }, [videoRef, processResults]);
+  }, [videoRef, enabled, processResults]);
 
   return { hands, cameraError, isLoading };
 }

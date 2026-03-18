@@ -7,12 +7,13 @@ export default function App() {
   const videoRef = useRef(null);
   const containerRef = useRef(null);
 
+  const [cameraStarted, setCameraStarted] = useState(false);
   const [soundOn, setSoundOn] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
-  const [showDebug, setShowDebug] = useState(false);
+
   const [dimensions, setDimensions] = useState({ width: 1280, height: 720 });
 
-  const { hands, cameraError, isLoading } = useHandTracking(videoRef);
+  const { hands, cameraError, isLoading } = useHandTracking(videoRef, cameraStarted);
 
   useGestureSound(hands, soundOn);
 
@@ -81,11 +82,21 @@ export default function App() {
 
         <StatusText
           hands={hands}
-          showDebug={showDebug}
+          showDebug={false}
           stretchAmount={stretchAmount}
         />
 
-        {isLoading && (
+        {!cameraStarted && !cameraError && (
+          <div className="start-screen">
+            <h2>stretch</h2>
+            <p>Hand gesture tracking using your camera</p>
+            <button className="start-btn" onClick={() => setCameraStarted(true)}>
+              Start Camera
+            </button>
+          </div>
+        )}
+
+        {cameraStarted && isLoading && (
           <div className="loading-state">
             <div className="spinner" />
             <p>Loading hand tracking...</p>
@@ -109,18 +120,9 @@ export default function App() {
           Sound: {soundOn ? 'ON' : 'OFF'}
         </button>
 
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <button
-            className="help-btn"
-            onClick={() => setShowDebug((d) => !d)}
-            style={{ fontSize: '12px', fontFamily: 'monospace' }}
-          >
-            d
-          </button>
-          <button className="help-btn" onClick={() => setShowHelp(true)}>
-            ?
-          </button>
-        </div>
+        <button className="help-btn" onClick={() => setShowHelp(true)}>
+          ?
+        </button>
       </div>
 
       {showHelp && (
