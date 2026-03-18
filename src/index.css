@@ -189,6 +189,13 @@ html, body, #root {
   letter-spacing: 0.02em;
 }
 
+.help-gesture-img {
+  width: 120px;
+  height: auto;
+  margin-bottom: 24px;
+  opacity: 0.85;
+}
+
 .help-content p {
   font-family: var(--font-body);
   font-size: 16px;

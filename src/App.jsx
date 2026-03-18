@@ -1,5 +1,6 @@
 import { useRef, useState, useEffect, useMemo } from 'react';
 import useHandTracking from './useHandTracking';
+import gestureSvg from './assets/gesture.svg';
 import GestureOverlay from './GestureOverlay';
 import StatusText from './StatusText';
 export default function App() {
@@ -118,6 +119,7 @@ export default function App() {
         <div className="help-overlay" onClick={() => setShowHelp(false)}>
           <div className="help-content" onClick={(e) => e.stopPropagation()}>
             <h2>Stretch Me</h2>
+            <img src={gestureSvg} alt="Pinch gesture illustration" className="help-gesture-img" />
             <p>Stretch Me is a game where you stretch a line to connect two points.</p>
             <p>Try pinching your index finger and thumb together on both hands to start.</p>
             <p>Have fun. Play with yourself. Play with your friends.</p>
