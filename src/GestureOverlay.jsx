@@ -87,7 +87,7 @@ export default function GestureOverlay({ hands, width, height }) {
       const pixelDist = Math.sqrt(lineDx * lineDx + lineDy * lineDy);
       const maxDist = Math.sqrt(width * width + height * height);
       const t = Math.min(pixelDist / maxDist, 1);
-      const lineWidth = 18 * (1 - t) + 2;
+      const lineWidth = 10 * (1 - t) + 2;
 
       ctx.save();
       ctx.strokeStyle = '#3B82F6';
