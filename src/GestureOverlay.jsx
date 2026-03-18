@@ -35,7 +35,25 @@ function drawHand(ctx, landmarks, width, height, isPinching) {
   }
   ctx.restore();
 
-  // Draw fingertip dots only
+  // Draw all landmarks with numbered labels
+  for (let i = 0; i < landmarks.length; i++) {
+    const lm = landmarks[i];
+    const x = (1 - lm.x) * width;
+    const y = lm.y * height;
+
+    // Neon green dot
+    ctx.beginPath();
+    ctx.arc(x, y, 2, 0, 2 * Math.PI);
+    ctx.fillStyle = '#39ff14';
+    ctx.fill();
+
+    // Numbered label
+    ctx.font = '9px monospace';
+    ctx.fillStyle = '#39ff14';
+    ctx.fillText(i, x + 5, y - 5);
+  }
+
+  // Draw fingertip highlights
   for (const i of FINGERTIPS) {
     const lm = landmarks[i];
     const x = (1 - lm.x) * width;
