@@ -82,11 +82,18 @@ export default function GestureOverlay({ hands, width, height }) {
       const x2 = (1 - (thumb1.x + index1.x) / 2) * width;
       const y2 = ((thumb1.y + index1.y) / 2) * height;
 
+      const lineDx = x2 - x1;
+      const lineDy = y2 - y1;
+      const pixelDist = Math.sqrt(lineDx * lineDx + lineDy * lineDy);
+      const maxDist = Math.sqrt(width * width + height * height);
+      const t = Math.min(pixelDist / maxDist, 1);
+      const lineWidth = 20 * (1 - t) + 1;
+
       ctx.save();
       ctx.strokeStyle = '#3B82F6';
-      ctx.lineWidth = 12;
+      ctx.lineWidth = lineWidth;
       ctx.lineCap = 'round';
-      ctx.shadowBlur = 12;
+      ctx.shadowBlur = lineWidth;
       ctx.shadowColor = '#3B82F6';
       ctx.beginPath();
       ctx.moveTo(x1, y1);
