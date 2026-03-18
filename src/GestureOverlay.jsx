@@ -114,7 +114,7 @@ export default function GestureOverlay({ hands, width, height }) {
       ctx.stroke();
 
       // Layer 3 — Core beam (sharp, bright, pulsing)
-      const pulse = (scale * 3 + 1.5) + Math.sin(Date.now() / 80) * 0.6;
+      const pulse = (scale * 10.5 + 1.5) + Math.sin(Date.now() / 80) * 0.6;
       ctx.strokeStyle = '#FFFFFF';
       ctx.lineWidth = pulse;
       ctx.shadowBlur = scale * 12 + 3;
