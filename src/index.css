@@ -243,6 +243,12 @@ html, body, #root {
   gap: 16px;
 }
 
+.start-gesture-img {
+  width: 260px;
+  height: auto;
+  opacity: 0.85;
+}
+
 .start-screen h2 {
   font-size: clamp(48px, 10vw, 96px);
   font-weight: 300;
