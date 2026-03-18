@@ -87,7 +87,7 @@ export default function App() {
           <div className="start-screen">
             <img src={gestureSvg} alt="Pinch gesture illustration" className="start-gesture-img" />
             <h2>stretch</h2>
-            <p>Hand gesture tracking using your camera</p>
+            <p>Use your hands to stretch a beam of light</p>
             <button className="start-btn" onClick={() => setCameraStarted(true)}>
               Start Camera
             </button>
