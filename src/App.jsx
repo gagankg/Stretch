@@ -123,7 +123,7 @@ export default function App() {
             <img src={gestureSvg} alt="Pinch gesture illustration" className="help-gesture-img" />
             <p>Stretch is a game where you stretch a line to connect two points.</p>
             <p>Try pinching your index finger and thumb together on both hands to start.</p>
-            <p>Have fun. Play with yourself. Play with your friends.</p>
+            <p>Have fun.</p>
             <button className="help-close" onClick={() => setShowHelp(false)}>
               Got it
             </button>
