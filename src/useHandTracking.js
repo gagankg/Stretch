@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { FilesetResolver, HandLandmarker, ImageSegmenter } from '@mediapipe/tasks-vision';
+import { FilesetResolver, HandLandmarker } from '@mediapipe/tasks-vision';
 
 const PINCH_THRESHOLD = 0.08;
 const RELEASE_THRESHOLD = 0.15;
@@ -34,11 +34,8 @@ export default function useHandTracking(videoRef) {
 
   const handStatesRef = useRef([createHandState(), createHandState()]);
   const handLandmarkerRef = useRef(null);
-  const imageSegmenterRef = useRef(null);
   const rafRef = useRef(null);
   const streamRef = useRef(null);
-  const segMaskCanvasRef = useRef(null);
-  const maskImageDataRef = useRef(null);
 
   const processResults = useCallback((results) => {
     const detected = results.landmarks || [];
@@ -144,25 +141,7 @@ export default function useHandTracking(videoRef) {
           return;
         }
 
-        const imageSegmenter = await ImageSegmenter.createFromOptions(vision, {
-          baseOptions: {
-            modelAssetPath:
-              'https://storage.googleapis.com/mediapipe-models/image_segmenter/selfie_segmenter/float16/latest/selfie_segmenter.tflite',
-            delegate: 'GPU',
-          },
-          runningMode: 'VIDEO',
-          outputCategoryMask: false,
-          outputConfidenceMasks: true,
-        });
-
-        if (cancelled) {
-          handLandmarker.close();
-          imageSegmenter.close();
-          return;
-        }
-
         handLandmarkerRef.current = handLandmarker;
-        imageSegmenterRef.current = imageSegmenter;
 
         const stream = await navigator.mediaDevices.getUserMedia({
           video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'user' },
@@ -171,7 +150,6 @@ export default function useHandTracking(videoRef) {
         if (cancelled) {
           stream.getTracks().forEach((t) => t.stop());
           handLandmarker.close();
-          imageSegmenter.close();
           return;
         }
 
@@ -187,36 +165,8 @@ export default function useHandTracking(videoRef) {
 
           if (video.readyState >= 2 && video.currentTime !== lastTime) {
             lastTime = video.currentTime;
-            const now = performance.now();
-            const results = handLandmarker.detectForVideo(video, now);
+            const results = handLandmarker.detectForVideo(video, performance.now());
             processResults(results);
-
-            // Run selfie segmentation and render mask to offscreen canvas
-            const segResults = imageSegmenter.segmentForVideo(video, now);
-            if (segResults.confidenceMasks?.length > 0) {
-              const mask = segResults.confidenceMasks[0];
-              const maskData = mask.getAsFloat32Array();
-              const w = mask.width;
-              const h = mask.height;
-              if (!segMaskCanvasRef.current) {
-                segMaskCanvasRef.current = document.createElement('canvas');
-              }
-              const mc = segMaskCanvasRef.current;
-              if (mc.width !== w || mc.height !== h) {
-                mc.width = w;
-                mc.height = h;
-                maskImageDataRef.current = null;
-              }
-              const mctx = mc.getContext('2d');
-              if (!maskImageDataRef.current) {
-                maskImageDataRef.current = mctx.createImageData(w, h);
-              }
-              const imgData = maskImageDataRef.current;
-              for (let i = 0; i < maskData.length; i++) {
-                imgData.data[i * 4 + 3] = (1 - maskData[i]) * 255;
-              }
-              mctx.putImageData(imgData, 0, 0);
-            }
           }
 
           rafRef.current = requestAnimationFrame(detect);
@@ -249,14 +199,10 @@ export default function useHandTracking(videoRef) {
         handLandmarkerRef.current.close();
         handLandmarkerRef.current = null;
       }
-      if (imageSegmenterRef.current) {
-        imageSegmenterRef.current.close();
-        imageSegmenterRef.current = null;
-      }
     };
   }, [videoRef, processResults]);
 
-  return { hands, cameraError, isLoading, segMaskCanvasRef };
+  return { hands, cameraError, isLoading };
 }
 
 export { GESTURE_STATES };
