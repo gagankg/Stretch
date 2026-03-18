@@ -1,7 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { COLORS } from './colors';
 import { GESTURE_STATES } from './useHandTracking';
-import thuglifeSrc from './assets/thuglife.png';
 
 const PINCH_ON = 0.3;
 const PINCH_OFF = 0.4;
@@ -16,43 +15,6 @@ const BONE_CONNECTIONS = [
 ];
 
 const FINGERTIPS = [4, 8, 12, 16, 20];
-
-// Face landmark indices for sunglasses positioning
-const LEFT_EYE_OUTER = 33;
-const RIGHT_EYE_OUTER = 263;
-function drawThuglifeGlasses(ctx, img, faceLandmarks, width, height, intensity) {
-  if (!faceLandmarks || !img || intensity <= 0) return;
-
-  const leftOuter = faceLandmarks[LEFT_EYE_OUTER];
-  const rightOuter = faceLandmarks[RIGHT_EYE_OUTER];
-
-  // Mirrored canvas coords
-  const lx = (1 - leftOuter.x) * width;
-  const ly = leftOuter.y * height;
-  const rx = (1 - rightOuter.x) * width;
-  const ry = rightOuter.y * height;
-  const cx = (lx + rx) / 2;
-  const cy = (ly + ry) / 2;
-
-  // Eye span for scaling, with padding for the frames
-  const eyeSpan = Math.sqrt((rx - lx) ** 2 + (ry - ly) ** 2);
-  const glassesWidth = eyeSpan * 1.8;
-  const glassesHeight = glassesWidth * (img.naturalHeight / img.naturalWidth);
-
-  // Tilt angle to follow head rotation
-  // Mirroring swaps eye positions on canvas (lx > rx), so reverse direction
-  const angle = Math.atan2(ly - ry, lx - rx);
-
-  // Drop-down: slides from above as intensity goes 0→1
-  const dropOffset = (1 - intensity) * height * 0.15;
-
-  ctx.save();
-  ctx.globalAlpha = intensity;
-  ctx.translate(cx, cy - dropOffset);
-  ctx.rotate(angle);
-  ctx.drawImage(img, -glassesWidth / 2, -glassesHeight / 2, glassesWidth, glassesHeight);
-  ctx.restore();
-}
 
 function drawHand(ctx, landmarks, width, height, isPinching) {
   // Draw bone connections (subtle skeletal lines)
@@ -122,18 +84,10 @@ function drawHand(ctx, landmarks, width, height, isPinching) {
   }
 }
 
-export default function GestureOverlay({ hands, faceLandmarks, stretchAmount, width, height }) {
+export default function GestureOverlay({ hands, width, height }) {
   const canvasRef = useRef(null);
   const highlightRef = useRef([false, false]);
   const beamStartRef = useRef(null); // timestamp when beam first appeared
-  const thuglifeImgRef = useRef(null);
-
-  // Preload thuglife image once
-  useEffect(() => {
-    const img = new Image();
-    img.src = thuglifeSrc;
-    img.onload = () => { thuglifeImgRef.current = img; };
-  }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -262,12 +216,7 @@ export default function GestureOverlay({ hands, faceLandmarks, stretchAmount, wi
       beamStartRef.current = null;
     }
 
-    // Thuglife sunglasses when stretching
-    if (bothPinching && faceLandmarks && thuglifeImgRef.current) {
-      const intensity = Math.min((stretchAmount || 0) * 2, 1);
-      drawThuglifeGlasses(ctx, thuglifeImgRef.current, faceLandmarks, width, height, intensity);
-    }
-  }, [hands, faceLandmarks, stretchAmount, width, height]);
+  }, [hands, width, height]);
 
   return (
     <canvas
