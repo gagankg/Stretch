@@ -229,6 +229,7 @@ html, body, #root {
 }
 
 .start-screen p {
+  font-family: 'Helvetica Neue', -apple-system, 'Segoe UI', Helvetica, sans-serif;
   font-size: 15px;
   color: rgba(255, 255, 255, 0.5);
   font-weight: 300;
@@ -242,7 +243,7 @@ html, body, #root {
   padding: 12px 36px;
   border-radius: 999px;
   font-size: 15px;
-  font-family: 'Exposure', sans-serif;
+  font-family: 'Helvetica Neue', -apple-system, 'Segoe UI', Helvetica, sans-serif;
   cursor: pointer;
   transition: background 0.2s ease, transform 0.1s ease;
   letter-spacing: 0.05em;
