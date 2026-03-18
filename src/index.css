@@ -9,7 +9,7 @@ html, body, #root {
   height: 100%;
   overflow: hidden;
   background: #000;
-  font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: 'Exposure', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   user-select: none;
@@ -45,7 +45,7 @@ html, body, #root {
   left: 0;
   right: 0;
   text-align: center;
-  font-family: 'Georgia', 'Times New Roman', 'Playfair Display', serif;
+  font-family: 'Exposure', sans-serif;
   font-size: clamp(28px, 5vw, 56px);
   font-style: italic;
   font-weight: 300;
