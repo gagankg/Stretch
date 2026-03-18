@@ -52,10 +52,10 @@ html, body, #root {
   pointer-events: none;
   z-index: 1;
   background: radial-gradient(
-    ellipse 50% 50% at center,
+    ellipse 60% 60% at center,
     transparent 0%,
-    rgba(0, 0, 0, 0.3) 50%,
-    rgba(0, 0, 0, 0.85) 100%
+    rgba(0, 0, 0, 0.12) 60%,
+    rgba(0, 0, 0, 0.35) 100%
   );
   opacity: 0;
   transition: opacity 0.2s ease;
