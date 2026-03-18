@@ -128,27 +128,10 @@ export default function App() {
       {showHelp && (
         <div className="help-overlay" onClick={() => setShowHelp(false)}>
           <div className="help-content" onClick={(e) => e.stopPropagation()}>
-            <h2>stretch</h2>
-            <p>Pinch your thumb and index finger together in front of the camera.</p>
-            <div className="gesture-list">
-              <div className="gesture-item">
-                <span className="gesture-icon">V</span>
-                <span>Open hand — idle</span>
-              </div>
-              <div className="gesture-item">
-                <span className="gesture-icon">O</span>
-                <span>Pinch — thumb meets index finger</span>
-              </div>
-              <div className="gesture-item">
-                <span className="gesture-icon">*</span>
-                <span>Hold — sustained pinch for 500ms</span>
-              </div>
-              <div className="gesture-item">
-                <span className="gesture-icon">~</span>
-                <span>Release — fingers separating</span>
-              </div>
-            </div>
-            <p>Toggle sound for audio feedback on gestures.</p>
+            <h2>Stretch Me</h2>
+            <p>Stretch Me is a game where you stretch a line to connect two points.</p>
+            <p>Try pinching your index finger and thumb together on both hands to start.</p>
+            <p>Have fun. Play with yourself. Play with your friends.</p>
             <button className="help-close" onClick={() => setShowHelp(false)}>
               Got it
             </button>
