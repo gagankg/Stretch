@@ -24,10 +24,10 @@ function getMostActive(hands) {
 export default function StatusText({ hands, showDebug, stretchAmount }) {
   const { pinchDistance } = getMostActive(hands);
 
-  // EXPO axis: -100 (thin) to +100 (thick)
-  // Stretched far apart → thin (-100), close together → thick (+100)
+  // EXPO axis: -100 (thick) to +100 (thin)
+  // Stretched far apart → thin (+100), close together → thick (-100)
   const expo = stretchAmount != null
-    ? Math.round((1 - stretchAmount) * 200 - 100)
+    ? Math.round(stretchAmount * 200 - 100)
     : 0;
 
   return (
