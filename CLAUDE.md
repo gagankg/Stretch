@@ -39,3 +39,26 @@ Uses `@mediapipe/tasks-vision` (npm) with `HandLandmarker` API. WASM files loade
 - MediaPipe installed via npm (`@mediapipe/tasks-vision`), WASM loaded from CDN at runtime
 - Camera permission errors show a user-friendly error state
 - Must work on Chrome desktop and mobile Safari
+
+## Design Context
+
+### Users
+Creative technologists, designers, and developers browsing a portfolio. They arrive curious, looking for craft and novelty. The job: experience something that feels inventive and well-made in under 30 seconds. Context is desktop or mobile, likely shared via link.
+
+### Brand Personality
+**Playful, experimental, raw.** Stretch is a tactile web toy — it should feel like picking up a strange, beautiful instrument for the first time. Not polished-corporate, not pixel-sterile. It should feel like something built in a lab that leaked onto the internet.
+
+### Aesthetic Direction
+- **Visual tone**: Dark, neon-accented, lo-fi meets high-fidelity. Think oscilloscope display meets Teenage Engineering product page — bold type, exposed system data, generous negative space.
+- **References**: Teenage Engineering (bold product design, playful-yet-precise, unapologetic use of color on dark surfaces), demoscene art, instrument UIs.
+- **Anti-references**: Apple-clean minimalism, generic SaaS dashboards, glassmorphism-heavy landing pages, anything that looks like a template.
+- **Theme**: Dark mode only. Deep near-black (`#0A0A12`) with violet primary (`#8B5CF6`). Neon green (`#39ff14`) for raw data overlays. Warm whites for beam core.
+- **Typography**: "Exposure" variable font for display (leveraging the EXPO axis for stretch-responsive type). Helvetica Neue / system sans for functional text. All lowercase.
+- **Surfaces**: Frosted glass sparingly. No card nesting. Borders are near-invisible (`rgba(255,255,255,0.06)`).
+
+### Design Principles
+1. **Show the machine** — Expose landmarks, numbers, raw data. The tracking system is the aesthetic, not something to hide behind polish.
+2. **Respond to the body** — Every visual element should react to hand position, pinch distance, or stretch amount. Static screens are failures.
+3. **Earn every pixel** — No decorative elements that don't serve the interaction. If it's on screen, it should move, inform, or delight.
+4. **Tension over comfort** — Prefer unexpected color combinations, asymmetric layouts, and variable font extremes over safe, centered, balanced compositions.
+5. **Instant legibility** — Despite the raw aesthetic, the core interaction (pinch + stretch) must be immediately obvious. Clarity at the edges, chaos at the center.
